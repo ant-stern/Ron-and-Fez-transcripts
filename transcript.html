@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transcript</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+            background-color: #000024;
+            color: white;
+        }
+        #logo {
+            width: 615px;
+            height: 250px;
+            margin: 20px auto;
+            display: block;
+        }
+        #episodeTitle {
+            text-align: center;
+            margin-bottom: 20px;
+            color: white;
+        }
+        #controls {
+            position: sticky;
+            top: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #000024;
+            border: 1px solid #ccc;
+            font-size: 16px;
+            z-index: 1000;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+            width: 95%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        #searchBox {
+            padding: 8px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            color: black;
+            flex-grow: 1;
+            flex-basis: 60%;
+            max-width: 400px;
+            box-sizing: border-box;
+        }
+        #searchButton, #prevMatch, #nextMatch {
+            padding: 8px 12px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            background-color: white;
+            border-radius: 3px;
+            cursor: pointer;
+            color: black;
+            box-sizing: border-box;
+        }
+        #matchCount {
+            margin: 0 10px;
+            box-sizing: border-box;
+        }
+        #transcriptContent {
+            margin-top: 20px;
+        }
+        #innerTranscript {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 10px;
+        }
+        @media (max-width: 600px) {
+            #searchBox {
+                max-width: 180px;
+                padding: 6px;
+                font-size: 14px;
+                flex-basis: 70%;
+            }
+            #searchButton, #prevMatch, #nextMatch {
+                padding: 6px 10px;
+                font-size: 14px;
+            }
+            #controls {
+                width: 100%;
+                margin: 0 auto;
+                padding: 0px;
+            }
+        }
+        .highlight {
+            background-color: white;
+            color: black;
+        }
+        /* New Styles for Links */
+        #topLinks {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1001;
+        }
+        #topLinks a {
+            color: white;
+            text-decoration: none;
+            margin-right: 15px;
+        }
+        #topLinks a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div id="topLinks">
+        <a href="http://podcasttranscripts.org">Home</a>
+        <a href="http://podcasttranscripts.org/about.html">About</a>
+    </div>
+    <a href="index.html"> <img id="logo" src="RandFlogo.png" alt="Ron and Fez Logo"> </a>
+    <div id="controls">
+        <input type="text" id="searchBox" placeholder="Search this transcript...">
+        <button id="searchButton">Search</button>
+        <button id="prevMatch" disabled>&uarr;</button>
+        <span id="matchCount"></span>
+        <button id="nextMatch" disabled>&darr;</button>
+    </div>
+    <h1 id="episodeTitle"></h1>
+    <div id="transcriptContent">
+        <div id="innerTranscript"></div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        let fileName = urlParams.get('file');
+
+        // Decode the filename
+        fileName = decodeURIComponent(fileName);
+
+        document.title = fileName.replace('.html', '');
+
+        const basePath = "html_transcripts/";
+        const fullUrl = basePath + encodeURIComponent(fileName);
+        console.log("Fetching:", fullUrl);
+
+        fetch(fullUrl)
+            .then(response => response.text())
+            .then(htmlContent => {
+                htmlContent = htmlContent.replace(/<pre>/g, '<div>').replace(/<\/pre>/g, '</div>');
+                htmlContent = htmlContent.replace(/\n/g, '<br>');
+                document.getElementById('innerTranscript').innerHTML = htmlContent;
+                setupInPageSearch();
+            });
+
+        function formatEpisodeTitle(fileName) {
+            const parts = fileName.match(/R&F-(\d{4})-(\d{2})-(\d{2})(?:-([PV]\d+))?\.html/);
+            if (parts) {
+                const year = parts[1];
+                const month = parseInt(parts[2]) - 1;
+                const day = parts[3];
+                const date = new Date(year, month, day);
+                const options = { year: 'numeric', month: 'long', day: 'numeric' };
+                return date.toLocaleDateString('en-US', options) + (parts[4] ? ` ${parts[4]}` : '');
+            }
+            return fileName;
+        }
+
+        document.getElementById('episodeTitle').textContent = formatEpisodeTitle(fileName);
+
+        function setupInPageSearch() {
+            let matches = [];
+            let currentMatch = -1;
+            let originalContent = document.getElementById('innerTranscript').innerHTML;
+
+            function performSearch() {
+                const originalQuery = document.getElementById('searchBox').value;
+                const query = originalQuery.toLowerCase();
+                const isNonConsecutive = query.includes('+');
+                const keywords = isNonConsecutive ? query.split('+').map(k => k.trim()) : query.split(' ');
+                let content = document.getElementById('innerTranscript').innerHTML.toLowerCase();
+                matches = [];
+                currentMatch = -1;
+
+                document.getElementById('innerTranscript').innerHTML = originalContent;
+
+                if (query) {
+                    if (isNonConsecutive) {
+                        let allIndices = [];
+                        keywords.forEach(keyword => {
+                            let index = content.indexOf(keyword);
+                            while (index !== -1) {
+                                allIndices.push({ index: index, keyword: keyword });
+                                index = content.indexOf(keyword, index + 1);
+                            }
+                        });
+
+                        if (keywords.every(keyword => content.includes(keyword))) {
+                            allIndices.sort((a, b) => a.index - b.index);
+                            matches = allIndices.map(item => item.index);
+                        }
+
+                    } else {
+                        let index = content.indexOf(query);
+                        while (index !== -1) {
+                            matches.push(index);
+                            index = content.indexOf(query, index + 1);
+                        }
+                    }
+
+                    if (matches.length > 0) {
+                        let innerHTML = document.getElementById('innerTranscript').innerHTML;
+                        let offset = 0;
+
+                        if (isNonConsecutive) {
+                            let allIndices = [];
+                            keywords.forEach(keyword => {
+                                let index = content.indexOf(keyword);
+                                while (index !== -1) {
+                                    allIndices.push({ index: index, keyword: keyword });
+                                    index = content.indexOf(keyword, index + 1);
+                                }
+                            });
+                            allIndices.sort((a, b) => a.index - b.index);
+
+                            allIndices.forEach(matchInfo => {
+                                const adjustedMatchIndex = matchInfo.index + offset;
+                                const highlightStart = adjustedMatchIndex;
+                                const highlightEnd = highlightStart + matchInfo.keyword.length;
+                                const highlighted = `<span class="highlight">${innerHTML.substring(highlightStart, highlightEnd)}</span>`;
+                                innerHTML = innerHTML.substring(0, highlightStart) + highlighted + innerHTML.substring(highlightEnd);
+                                offset += highlighted.length - matchInfo.keyword.length;
+                            });
+                        } else {
+                            matches.forEach(matchIndex => {
+                                const adjustedMatchIndex = matchIndex + offset;
+                                const highlightStart = adjustedMatchIndex;
+                                const highlightEnd = highlightStart + query.length;
+                                const highlighted = `<span class="highlight">${innerHTML.substring(highlightStart, highlightEnd)}</span>`;
+                                innerHTML = innerHTML.substring(0, highlightStart) + highlighted + innerHTML.substring(highlightEnd);
+                                offset += highlighted.length - query.length;
+                            });
+                        }
+
+                        document.getElementById('innerTranscript').innerHTML = innerHTML;
+                        currentMatch = 0;
+                        scrollToMatch();
+                    }
+                }
+                updateMatchCount();
+            }
+
+            function scrollToMatch() {
+                if (matches.length > 0 && currentMatch >= 0) {
+                    try {
+                        const highlighted = document.querySelectorAll('.highlight')[currentMatch];
+                        if (highlighted) {
+                            highlighted.scrollIntoView({ block: 'center' });
+                        }
+                    } catch (error) {
+                        console.error('Error scrolling to match:', error);
+                    }
+                }
+            }
+
+            function updateMatchCount() {
+                document.getElementById('matchCount').textContent = matches.length > 0 ? `${currentMatch + 1}/${matches.length}` : '';
+                document.getElementById('prevMatch').disabled = matches.length === 0 || currentMatch <= 0;
+                document.getElementById('nextMatch').disabled = matches.length === 0 || currentMatch >= matches.length - 1;
+            }
+
+            document.getElementById('searchButton').addEventListener('click', function() {
+                performSearch();
+            });
+            document.getElementById('searchBox').addEventListener('keydown', function(event) {
+                if (event.key === 'Enter') {
+                    performSearch();
+                }
+            });
+
+            document.getElementById('prevMatch').addEventListener('click', () => {
+                if (currentMatch > 0) {
+                    currentMatch--;
+                    scrollToMatch();
+                    updateMatchCount();
+                }
+            });
+
+            document.getElementById('nextMatch').addEventListener('click', () => {
+                if (currentMatch < matches.length - 1) {
+                    currentMatch++;
+                    scrollToMatch();
+                    updateMatchCount();
+                }
+            });
+        }
+    </script>
+</body>
+</html>

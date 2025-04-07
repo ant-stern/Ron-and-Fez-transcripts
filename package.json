@@ -1,0 +1,6 @@
+{
+  "name": "ron-and-fez-transcripts",
+  "dependencies": {
+    "lunr": "^2.3.9"
+  }
+}

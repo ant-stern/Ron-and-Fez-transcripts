@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ron and Fez Transcripts</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+            background-color: #000024;
+            color: white;
+        }
+        #logo {
+            width: 615px;
+            height: 250px;
+            margin: 20px auto;
+            display: block;
+        }
+        #searchInstructions {
+            text-align: center;
+            color: white;
+            margin-bottom: 20px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        #searchInstructions ul {
+            list-style-type: disc;
+            padding-left: 20px;
+            text-align: left;
+            margin: 10px auto;
+            max-width: 600px;
+        }
+        #searchInstructions li {
+            line-height: 1.6;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+            font-weight: normal;
+        }
+        #controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #000024;
+            border: 1px solid #ccc;
+            font-size: 16px;
+            border-radius: 5px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+            width: 95%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        #searchBox {
+            padding: 8px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            color: black;
+            flex-grow: 1;
+            flex-basis: 60%;
+            max-width: 400px;
+            box-sizing: border-box;
+        }
+        #searchButton, #prevMatch, #nextMatch {
+            padding: 8px 12px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            background-color: white;
+            border-radius: 3px;
+            cursor: pointer;
+            color: black;
+            box-sizing: border-box;
+        }
+        #matchCount {
+            margin: 0 10px;
+            box-sizing: border-box;
+        }
+        @media (max-width: 600px) {
+            #searchBox {
+                max-width: 180px;
+                padding: 6px;
+                font-size: 14px;
+                flex-basis: 70%;
+            }
+            #searchButton, #prevMatch, #nextMatch {
+                padding: 6px 10px;
+                font-size: 14px;
+            }
+            #controls {
+                width: 100%;
+                margin: 0 auto;
+                padding: 0px;
+            }
+        }
+        .highlight {
+            background-color: white;
+            color: black;
+        }
+        #results a:link {
+            color: white;
+            text-decoration: none;
+        }
+        #results a:visited {
+            color: yellow;
+            text-decoration: none;
+        }
+        #results p {
+            color: white;
+        }
+        /* New Styles for Links */
+        #topLinks {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1001;
+        }
+        #topLinks a {
+            color: white;
+            text-decoration: none;
+            margin-right: 15px;
+        }
+        #topLinks a:hover {
+            text-decoration: underline;
+        }
+        #results {
+            margin-top: 20px;
+            max-width: 800px; /* Limit the width */
+            margin-left: auto; /* Center horizontally */
+            margin-right: auto; /* Center horizontally */
+            padding: 0 10px; /* Add some padding for visual spacing */
+        }
+    </style>
+</head>
+<body>
+    <div id="topLinks">
+        <a href="http://podcasttranscripts.org">Home</a>
+        <a href="http://podcasttranscripts.org/about.html">About</a>
+    </div>
+    <img id="logo" src="RandFlogo.png" alt="Ron and Fez Logo">
+    <div id="controls">
+        <input type="text" id="searchBox" placeholder="Scan all transcripts...">
+        <button id="searchButton">Search</button>
+    </div>
+    <div id="searchInstructions">
+        <ul style="margin-top: 20px;">
+            <li>Shows from 2001-2015. WNEW, WJFK, and Sirius/XM. I tried to compile as complete an archive as possible. If you think something is missing, please check the About page and contact me.</li>
+            <li>Separate keywords/keyphrases with a "+" if you want to search for more than one. E.g. "standalone fruit + blueberry" would return all transcripts containing both of those phrases.</li>
+            <li>Be creative when searching proper nouns/made-up words. If "Jay Mohr" doesn't yield any results, try "J. Mohr", "J More", "Jay Moore", etc.</li>
+            <li>Click the episode date to open the full transcript.</li>
+        </ul>
+    </div>
+    <div id="results" style="margin-top: 20px;"></div>
+    <script src="lunr.js"></script>
+    <script>
+        fetch('search_index.json')
+            .then(response => response.json())
+            .then(data => {
+                const idx = lunr.Index.load(data);
+                const searchInstructions = document.getElementById('searchInstructions');
+                const resultsDiv = document.getElementById('results');
+
+                document.getElementById('searchButton').addEventListener('click', performSearch);
+                document.getElementById('searchBox').addEventListener('keydown', function(event) {
+                    if (event.key === 'Enter') {
+                        performSearch();
+                    }
+                });
+
+                function performSearch() {
+                    searchInstructions.style.display = 'none'; // Hide instructions
+                    resultsDiv.innerHTML = ''; // Clear previous results
+                    const query = document.getElementById('searchBox').value;
+                    const results = idx.search(query);
+                    displayResults(results, query);
+                }
+
+                function formatEpisodeTitle(fileName) {
+                    const parts = fileName.match(/R&F-(\d{4})-(\d{2})-(\d{2})(?:-([PV]\d+))?\.html/);
+                    if (parts) {
+                        const year = parts[1];
+                        const month = parseInt(parts[2]) - 1;
+                        const day = parts[3];
+                        const date = new Date(year, month, day);
+                        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+                        return date.toLocaleDateString('en-US', options) + (parts[4] ? ` ${parts[4]}` : '');
+                    }
+                    return fileName;
+                }
+
+                function displayResults(results, originalQuery) {
+                    const resultsDiv = document.getElementById('results');
+                    const query = originalQuery.toLowerCase();
+                    const isNonConsecutive = query.includes('+');
+                    const keywords = isNonConsecutive ? query.split('+').map(k => k.trim()) : query.split(' ');
+                    const processedFiles = new Set();
+
+                    results.sort((a, b) => {
+                        const partsA = a.ref.match(/R&F-(\d{4})-(\d{2})-(\d{2})(?:-([PV]\d+))?\.html/);
+                        const partsB = b.ref.match(/R&F-(\d{4})-(\d{2})-(\d{2})(?:-([PV]\d+))?\.html/);
+
+                        if (partsA && partsB) {
+                            const yearA = parseInt(partsA[1]);
+                            const monthA = parseInt(partsA[2]);
+                            const dayA = parseInt(partsA[3]);
+                            const partA = partsA[4] || '';
+                            const yearB = parseInt(partsB[1]);
+                            const monthB = parseInt(partsB[2]);
+                            const dayB = parseInt(partsB[3]);
+                            const partB = partsB[4] || '';
+
+                            if (yearA !== yearB) return yearA - yearB;
+                            if (monthA !== monthB) return monthA - monthB;
+                            if (dayA !== dayB) return dayA - dayB;
+                            return partA.localeCompare(partB);
+                        }
+                        return 0;
+                    });
+
+                    const fetchPromises = results.map(result => {
+                        const htmlFileName = result.ref;
+                        if (processedFiles.has(htmlFileName)) {
+                            return Promise.resolve(null);
+                        }
+                        processedFiles.add(htmlFileName);
+
+                        return fetch('html_transcripts/' + htmlFileName)
+                            .then(response => response.text())
+                            .then(htmlContent => {
+                                const tempDiv = document.createElement('div');
+                                tempDiv.innerHTML = htmlContent;
+                                let textContent = tempDiv.textContent.toLowerCase();
+
+                                let match = false;
+                                if (isNonConsecutive) {
+                                    match = keywords.every(keyword => textContent.includes(keyword));
+                                } else {
+                                    match = textContent.includes(query);
+                                }
+
+                                if (match) {
+                                    const resultDiv = document.createElement('div');
+                                    resultDiv.className = 'result';
+                                    let contextHtml = '';
+                                    let resultCount = 1;
+
+                                    let allIndices = [];
+                                    if (isNonConsecutive) {
+                                        keywords.forEach(keyword => {
+                                            let index = textContent.indexOf(keyword);
+                                            while (index !== -1) {
+                                                allIndices.push({ index: index, keyword: keyword });
+                                                index = textContent.indexOf(keyword, index + 1);
+                                            }
+                                        });
+                                    } else {
+                                        let index = textContent.indexOf(query);
+                                        while (index !== -1) {
+                                            allIndices.push({ index: index, keyword: query });
+                                            index = textContent.indexOf(query, index + 1);
+                                        }
+                                    }
+
+                                    allIndices.sort((a, b) => a.index - b.index);
+
+                                    const usedIndices = new Set();
+
+                                    allIndices.forEach(matchInfo => {
+                                        if (usedIndices.has(matchInfo.index)) {
+                                            return;
+                                        }
+
+                                        const start = Math.max(0, matchInfo.index - 200);
+                                        const end = Math.min(tempDiv.textContent.length, matchInfo.index + matchInfo.keyword.length + 200);
+                                        let context = tempDiv.textContent.substring(start, end);
+
+                                        for (let i = start; i < end; i++) {
+                                            usedIndices.add(i);
+                                        }
+
+                                        if (start > 0) context = '... ' + context;
+                                        if (end < tempDiv.textContent.length) context = context + ' ...';
+
+                                        let highlightStart = context.toLowerCase().indexOf(matchInfo.keyword);
+                                        if (highlightStart !== -1) {
+                                            context = context.substring(0, highlightStart) +
+                                                `<span class="highlight">${context.substring(highlightStart, highlightStart + matchInfo.keyword.length)}</span>` +
+                                                context.substring(highlightStart + matchInfo.keyword.length);
+                                        }
+
+                                        contextHtml += `<p><strong>Result ${resultCount}:</strong> ${context}</p>`;
+                                        resultCount++;
+                                    });
+
+                                    const formattedTitle = formatEpisodeTitle(htmlFileName);
+                                    const link = `<a href="transcript.html?file=${encodeURIComponent(htmlFileName)}" target="_blank"><h3>${formattedTitle}</h3></a>`;
+                                    return { html: `${link}${contextHtml}`, date: result.ref };
+                                }
+                                return null;
+                            })
+                            .catch(error => {
+                                console.error('Error loading HTML file:', error);
+                                return { html: `<div class="result">Error loading ${htmlFileName}</div>`, date: result.ref };
+                            });
+                    });
+                    Promise.all(fetchPromises).then(resultData => {
+                        const validResults = resultData.filter(result => result !== null);
+                        validResults.sort((a, b) => {
+                            const partsA = a.date.match(/R&F-(\d{4})-(\d{2})-(\d{2})(?:-([PV]\d+))?\.html/);
+                            const partsB = b.date.match(/R&F-(\d{4})-(\d{2})-(\d{2})(?:-([PV]\d+))?\.html/);
+
+                            if (partsA && partsB) {
+                                const yearA = parseInt(partsA[1]);
+                                const monthA = parseInt(partsA[2]);
+                                const dayA = parseInt(partsA[3]);
+                                const partA = partsA[4] || '';
+                                const yearB = parseInt(partsB[1]);
+                                const monthB = parseInt(partsB[2]);
+                                const dayB = parseInt(partsB[3]);
+                                const partB = partsB[4] || '';
+
+                                if (yearA !== yearB) return yearA - yearB;
+                                if (monthA !== monthB) return monthA - monthB;
+                                if (dayA !== dayB) return dayA - dayB;
+                                return partA.localeCompare(partB);
+                            }
+                            return 0;
+                        });
+                        validResults.forEach(result => {
+                            const resultDiv = document.createElement('div');
+                            resultDiv.className = 'result';
+                            resultDiv.innerHTML = result.html;
+                            resultsDiv.appendChild(resultDiv);
+                        });
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching or parsing search_index.json:', error);
+            });
+    </script>
+</body>
+</html>
