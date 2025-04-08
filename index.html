@@ -221,13 +221,12 @@
                     scanningMessage.style.display = 'block'; // Show scanning message
                     resultsDiv.innerHTML = ''; // Clear previous results
                     const query = document.getElementById('searchBox').value;
-                    const results = idx.search(query);
-
+                    const results = idx.search(query); // Use the raw query
                     // Introduce a delay before displaying results
                     setTimeout(() => {
-                        displayResults(results, query);
+                        displayResults(results, query); // Keep the original query for highlighting
                         scanningMessage.style.display = 'none'; // Hide scanning message after results
-                    }, 250); // Increased the delay to 250 milliseconds - adjust as needed
+                    }, 60000);
                 }
 
                 function formatEpisodeTitle(fileName) {
