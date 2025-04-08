@@ -25,8 +25,7 @@
             /* Maintain aspect ratio */
         }
 
-        #searchInstructions,
-        #scanningMessage {
+        #searchInstructions {
             text-align: center;
             color: white;
             margin-bottom: 20px;
@@ -48,12 +47,6 @@
             margin-bottom: 10px;
             font-size: 1.1em;
             font-weight: normal;
-        }
-
-        #scanningMessage {
-            font-size: 1.2em;
-            font-style: italic;
-            display: none;
         }
 
         #controls {
@@ -197,7 +190,6 @@
             <li>Click the episode date to open the full transcript.</li>
         </ul>
     </div>
-    <div id="scanningMessage">Scanning transcripts...</div>
     <div id="results" style="margin-top: 20px;"></div>
     <script src="lunr.js"></script>
     <script>
@@ -206,7 +198,7 @@
             .then(data => {
                 const idx = lunr.Index.load(data);
                 const searchInstructions = document.getElementById('searchInstructions');
-                const scanningMessage = document.getElementById('scanningMessage');
+                // REMOVED: const scanningMessage = document.getElementById('scanningMessage');
                 const resultsDiv = document.getElementById('results');
 
                 document.getElementById('searchButton').addEventListener('click', performSearch);
@@ -218,15 +210,15 @@
 
                 function performSearch() {
                     searchInstructions.style.display = 'none'; // Hide instructions
-                    scanningMessage.style.display = 'block'; // Show scanning message
+                    // REMOVED: scanningMessage.style.display = 'block'; // Show scanning message
                     resultsDiv.innerHTML = ''; // Clear previous results
                     const query = document.getElementById('searchBox').value;
                     const results = idx.search(query); // Use the raw query
                     // Introduce a delay before displaying results
                     setTimeout(() => {
                         displayResults(results, query); // Keep the original query for highlighting
-                        scanningMessage.style.display = 'none'; // Hide scanning message after results
-                    }, 2000);
+                        // REMOVED: scanningMessage.style.display = 'none'; // Hide scanning message after results
+                    }, 0); // Set delay to 0 to remove the pause
                 }
 
                 function formatEpisodeTitle(fileName) {
