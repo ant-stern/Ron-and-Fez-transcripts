@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,14 +13,18 @@
             background-color: #000024;
             color: white;
         }
+
         #logo {
             width: 615px;
             height: 250px;
             margin: 20px auto;
             display: block;
-            max-width: 90%; /* Make the logo responsive */
-            height: auto; /* Maintain aspect ratio */
+            max-width: 90%;
+            /* Make the logo responsive */
+            height: auto;
+            /* Maintain aspect ratio */
         }
+
         #searchInstructions {
             text-align: center;
             color: white;
@@ -28,6 +33,7 @@
             margin-left: auto;
             margin-right: auto;
         }
+
         #searchInstructions ul {
             list-style-type: disc;
             padding-left: 20px;
@@ -35,12 +41,14 @@
             margin: 10px auto;
             max-width: 600px;
         }
+
         #searchInstructions li {
             line-height: 1.6;
             margin-bottom: 10px;
             font-size: 1.1em;
             font-weight: normal;
         }
+
         #controls {
             display: flex;
             justify-content: center;
@@ -57,6 +65,7 @@
             margin-left: auto;
             margin-right: auto;
         }
+
         #searchBox {
             padding: 8px;
             font-size: 16px;
@@ -68,7 +77,10 @@
             max-width: 400px;
             box-sizing: border-box;
         }
-        #searchButton, #prevMatch, #nextMatch {
+
+        #searchButton,
+        #prevMatch,
+        #nextMatch {
             padding: 8px 12px;
             font-size: 16px;
             border: 1px solid #ddd;
@@ -78,10 +90,12 @@
             color: black;
             box-sizing: border-box;
         }
+
         #matchCount {
             margin: 0 10px;
             box-sizing: border-box;
         }
+
         @media (max-width: 600px) {
             #searchBox {
                 max-width: 180px;
@@ -89,31 +103,40 @@
                 font-size: 14px;
                 flex-basis: 70%;
             }
-            #searchButton, #prevMatch, #nextMatch {
+
+            #searchButton,
+            #prevMatch,
+            #nextMatch {
                 padding: 6px 10px;
                 font-size: 14px;
             }
+
             #controls {
                 width: 100%;
                 margin: 0 auto;
                 padding: 0px;
             }
         }
+
         .highlight {
             background-color: orange;
             color: black;
         }
+
         #results a:link {
             color: #999999;
             text-decoration: none;
         }
+
         #results a:visited {
             color: #4D4D4D;
             text-decoration: none;
         }
+
         #results p {
             color: white;
         }
+
         /* New Styles for Links */
         #topLinks {
             position: absolute;
@@ -121,23 +144,31 @@
             left: 10px;
             z-index: 1001;
         }
+
         #topLinks a {
             color: white;
             text-decoration: none;
             margin-right: 15px;
         }
+
         #topLinks a:hover {
             text-decoration: underline;
         }
+
         #results {
             margin-top: 20px;
-            max-width: 800px; /* Limit the width */
-            margin-left: auto; /* Center horizontally */
-            margin-right: auto; /* Center horizontally */
-            padding: 0 10px; /* Add some padding for visual spacing */
+            max-width: 800px;
+            /* Limit the width */
+            margin-left: auto;
+            /* Center horizontally */
+            margin-right: auto;
+            /* Center horizontally */
+            padding: 0 10px;
+            /* Add some padding for visual spacing */
         }
     </style>
 </head>
+
 <body>
     <div id="topLinks">
         <a href="http://podcasttranscripts.org">Home</a>
@@ -150,9 +181,12 @@
     </div>
     <div id="searchInstructions">
         <ul style="margin-top: 20px;">
-            <li>Shows from 2001-2015. WNEW, WJFK, and Sirius/XM. I tried to compile as complete an archive as possible. If you think something is missing, please check the About page and contact me.</li>
-            <li>Separate keywords/keyphrases with a "+" if you want to search for more than one. E.g. "standalone fruit + blueberry" would return all transcripts containing both of those phrases.</li>
-            <li>Be creative when searching proper nouns/made-up words. If "Jay Mohr" doesn't yield any results, try "J. Mohr", "J More", "Jay Moore", etc.</li>
+            <li>Shows from 2001-2015. WNEW, WJFK, and Sirius/XM. I tried to compile as complete an archive as possible.
+                If you think something is missing, please check the About page and contact me.</li>
+            <li>Separate keywords/keyphrases with a "+" if you want to search for more than one. E.g. "standalone fruit
+                + blueberry" would return all transcripts containing both of those phrases.</li>
+            <li>Be creative when searching proper nouns/made-up words. If "Jay Mohr" doesn't yield any results, try "J.
+                Mohr", "J More", "Jay Moore", etc.</li>
             <li>Click the episode date to open the full transcript.</li>
         </ul>
     </div>
@@ -167,7 +201,7 @@
                 const resultsDiv = document.getElementById('results');
 
                 document.getElementById('searchButton').addEventListener('click', performSearch);
-                document.getElementById('searchBox').addEventListener('keydown', function(event) {
+                document.getElementById('searchBox').addEventListener('keydown', function (event) {
                     if (event.key === 'Enter') {
                         performSearch();
                     }
@@ -346,4 +380,5 @@
             });
     </script>
 </body>
+
 </html>
